@@ -61,7 +61,7 @@ public class AppendUpdateVoData extends AppendData {
     }
 
     protected Set<String> excludedColumn() {
-        return ToSet.asSet("del_flag", "root_id", "level", "tag", "parent_id", "create_time", "update_time", "create_by", "update_by");
+        return ToSet.asSet("del_flag", "root_id", "level", "tag", "create_time", "update_time", "create_by", "update_by");
     }
 
     private String fieldContent(Column column, Set<String> imports) {

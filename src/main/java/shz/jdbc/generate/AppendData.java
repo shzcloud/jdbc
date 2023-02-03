@@ -105,10 +105,6 @@ public abstract class AppendData {
         return generator.module(table);
     }
 
-    protected final String urlSuffix(Table table) {
-        return generator.urlSuffix(table);
-    }
-
     protected final String version() {
         return generator.version();
     }

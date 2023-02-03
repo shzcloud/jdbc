@@ -1,6 +1,5 @@
 package shz.jdbc.generate.module;
 
-import shz.core.NullHelp;
 import shz.jdbc.generate.AppendData;
 import shz.jdbc.generate.Tgp;
 import shz.jdbc.model.Table;
@@ -12,12 +11,7 @@ import java.util.Set;
 public class AppendRepositoryData extends AppendData {
     @Override
     protected String comment(Table table) {
-        String date = date();
-        return "/**\n" +
-                " * @author " + user(table) + "\n" +
-                (NullHelp.isBlank(date) ? "" : " * @date " + date + "\n") +
-                " * @description " + desc(table) + "持久层\n" +
-                " */";
+        return null;
     }
 
     @Override

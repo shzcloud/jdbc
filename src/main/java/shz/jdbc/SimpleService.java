@@ -2,11 +2,11 @@ package shz.jdbc;
 
 import shz.core.model.PageInfo;
 import shz.core.type.TypeHelp;
-import shz.orm.ClassInfo;
 import shz.orm.enums.Condition;
 import shz.orm.sql.WhereSql;
 import shz.spring.BeanContainer;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +35,8 @@ public abstract class SimpleService<T> implements IService<T> {
     }
 
     @Override
-    public int[] delete(List<?> ids) {
-        return batchDeleteById(ids);
+    public int delete(Collection<?> ids) {
+        return jdbcService.deleteByColumn(cls, jdbcService.nonNullClassInfo(cls).idField.getName(), ids, Condition.IN);
     }
 
     @Override
@@ -160,7 +160,7 @@ public abstract class SimpleService<T> implements IService<T> {
     }
 
     private WhereSql whereSql(Object obj, boolean orderBy) {
-        return jdbcService.whereSql(ClassInfo.getNonNull(cls), obj, null, orderBy);
+        return jdbcService.whereSql(jdbcService.nonNullClassInfo(cls), obj, null, orderBy);
     }
 
     @Override

@@ -5,7 +5,7 @@ import shz.jdbc.model.Table;
 
 import java.util.Properties;
 
-public abstract class DefaultEntityGenerator extends DefaultGenerator{
+public abstract class DefaultEntityGenerator extends DefaultGenerator {
     protected DefaultEntityGenerator(Properties properties) {
         super(properties);
     }
@@ -133,11 +133,6 @@ public abstract class DefaultEntityGenerator extends DefaultGenerator{
     @Override
     protected final String module(Table table) {
         return super.module(table);
-    }
-
-    @Override
-    protected final String urlSuffix(Table table) {
-        return super.urlSuffix(table);
     }
 
     @Override

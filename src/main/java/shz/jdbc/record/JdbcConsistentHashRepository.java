@@ -2,7 +2,6 @@ package shz.jdbc.record;
 
 import shz.jdbc.entity.SysTableNodeTransferInfo;
 import shz.orm.annotation.*;
-import shz.orm.enums.ValueStrategy;
 
 @Repository
 public interface JdbcConsistentHashRepository {
@@ -36,7 +35,7 @@ public interface JdbcConsistentHashRepository {
             "WHERE table_name = :tableName " +
             "AND node = :node"
     )
-    int saveTransferInfo(String tableName, String node, @Param(value = "transferInfo", strategy = ValueStrategy.NOT_NULL) String transferInfo);
+    int saveTransferInfo(String tableName, String node, String transferInfo);
 
     @Query("SELECT transfer_info " +
             "FROM sys_table_node_transfer_info " +

@@ -1,10 +1,10 @@
 package shz.jdbc.generate.module;
 
-import shz.core.NullHelp;
 import shz.jdbc.generate.AppendData;
 import shz.jdbc.generate.Tgp;
 import shz.jdbc.model.Table;
 import shz.orm.entity.RecordEntity;
+import shz.orm.entity.TreeEntity;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,12 +13,7 @@ import java.util.Set;
 public class AppendServiceImplData extends AppendData {
     @Override
     protected String comment(Table table) {
-        String date = date();
-        return "/**\n" +
-                " * @author " + user(table) + "\n" +
-                (NullHelp.isBlank(date) ? "" : " * @date " + date + "\n") +
-                " * @description " + desc(table) + "服务实现类\n" +
-                " */";
+        return null;
     }
 
     @Override
@@ -55,6 +50,7 @@ public class AppendServiceImplData extends AppendData {
     protected List<String> content(Tgp tgp, Set<String> imports) {
         List<String> content = new LinkedList<>();
         String className = className(tgp.table);
+        String desc = desc(tgp.table);
         Class<?> superEntity = superEntity(tgp.table);
 
         if (superEntity != null && RecordEntity.class.isAssignableFrom(superEntity)) {
@@ -64,7 +60,7 @@ public class AppendServiceImplData extends AppendData {
             content.add("    @Override");
             content.add("    public PageInfo<Query" + className + "Vo.Vo> page(PageVo<Query" + className + "Vo, Query" + className + "Vo.Vo> pageVo) {");
             content.add("        Query" + className + "Vo reqVo = pageVo.getData();");
-            content.add("        ClassInfo classInfo = ClassInfo.getNonNull(" + className + ".class);");
+            content.add("        ClassInfo classInfo = jdbcService.nonNullClassInfo(" + className + ".class);");
             content.add("        ActionRunner<" + className + "> runner = runner(selectMap(new " + className + "()), null, null, null, 0, null, null, jdbcService.whereSql(classInfo, reqVo, null, false));");
             content.add("        PageInfo<" + className + "> page = page(pageVo.map(), runner, classInfo, null, Comparator.comparing(" + className + "::getCreateTime));");
             content.add("        return page.map(entity -> FieldSetter.copy(entity, new Query" + className + "Vo.Vo()));");
@@ -81,7 +77,6 @@ public class AppendServiceImplData extends AppendData {
             content.add("    }");
 
             imports.add("import " + tgp.queryVoGenInfo.packageName + ".Query" + className + "Vo;");
-            imports.add("import " + tgp.entityGenInfo.packageName + "." + className + ";");
             imports.add("import shz.jdbc.JdbcService;");
             imports.add("import shz.core.model.PageInfo;");
             imports.add("import shz.spring.model.PageVo;");
@@ -90,6 +85,84 @@ public class AppendServiceImplData extends AppendData {
             imports.add("import shz.core.FieldSetter;");
             imports.add("import java.util.Comparator;");
             imports.add("import java.util.List;");
+        } else if (superEntity != null && TreeEntity.class.isAssignableFrom(superEntity)) {
+            content.add("    @Lock(\"" + desc + "\")");
+            content.add("    public int add(@LockKey(\"parentId\") " + className + " entity) {");
+            content.add("        return jdbcService.insertTree(entity, tree -> ClientFailureMsg.requireNon(checkUniqueForInsert(tree, \"parentId\", \"name\"), \"" + desc + "已经存在\"), \"" + desc + "\");");
+            content.add("    }\n");
+
+            content.add("    @Lock(\"" + desc + "\")");
+            content.add("    public int update(@LockKey(\"parentId\") " + className + " entity) {");
+            content.add("        return jdbcService.updateTree(entity, tree -> ClientFailureMsg.requireNon(checkUniqueForUpdate(tree, \"parentId\", \"name\"), \"" + desc + "已经存在\"),  \"" + desc + "\");");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public int delete(Collection<?> ids) {");
+            content.add("        return super.delete(ids);");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public List<" + className + "> list() {");
+            content.add("        return selectList(null);");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public " + className + "DetailVo detail(Long id) {");
+            content.add("        " + className + " entity = selectById(id);");
+            content.add("        ClientFailureMsg.requireNonNull(entity, \"" + desc + "不存在\");");
+            content.add("        return FieldSetter.copy(entity, new " + className + "DetailVo());");
+            content.add("    }");
+
+            imports.add("import " + tgp.detailVoGenInfo.packageName + "." + className + "DetailVo;");
+            imports.add("import shz.core.msg.ClientFailureMsg;");
+            imports.add("import shz.core.FieldSetter;");
+            imports.add("import java.util.List;");
+            imports.add("import java.util.Collection;");
+            imports.add("import shz.core.lock.Lock;");
+            imports.add("import shz.core.lock.LockKey;");
+        } else {
+            content.add("    @Lock(\"" + desc + "\")");
+            content.add("    public int add(@LockKey(\"code\") " + className + " entity) {");
+            content.add("        ClientFailureMsg.requireNon(checkUniqueForInsert(entity, \"code\"), \"" + desc + "已经存在\");");
+            content.add("        return insert(entity);");
+            content.add("    }\n");
+
+            content.add("    @Lock(\"" + desc + "\")");
+            content.add("    public int update(@LockKey(\"code\") " + className + " entity) {");
+            content.add("        " + className + " oldEntity = selectById(entity.getId());");
+            content.add("        ClientFailureMsg.requireNonNull(oldEntity, \"" + desc + "不存在\");");
+            content.add("        ClientFailureMsg.requireNon(checkUniqueForUpdate(entity, \"code\"), \"" + desc + "已经存在\");");
+            content.add("        return updateById(entity);");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public int delete(Collection<?> ids) {");
+            content.add("        return super.delete(ids);");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public PageInfo<Query" + className + "Vo.Vo> page(PageVo<Query" + className + "Vo, Query" + className + "Vo.Vo> pageVo) {");
+            content.add("        Query" + className + "Vo reqVo = pageVo.getData();");
+            content.add("        PageInfo<" + className + "> page = selectPage(pageVo.map(), reqVo);");
+            content.add("        return page.map(entity -> FieldSetter.copy(entity, new Query" + className + "Vo.Vo()));");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    public " + className + "DetailVo detail(Long id) {");
+            content.add("        " + className + " entity = selectById(id);");
+            content.add("        ClientFailureMsg.requireNonNull(entity, \"" + desc + "不存在\");");
+            content.add("        return FieldSetter.copy(entity, new " + className + "DetailVo());");
+            content.add("    }");
+
+            imports.add("import " + tgp.queryVoGenInfo.packageName + ".Query" + className + "Vo;");
+            imports.add("import " + tgp.detailVoGenInfo.packageName + "." + className + "DetailVo;");
+            imports.add("import shz.core.model.PageInfo;");
+            imports.add("import shz.spring.model.PageVo;");
+            imports.add("import shz.core.msg.ClientFailureMsg;");
+            imports.add("import shz.core.FieldSetter;");
+            imports.add("import java.util.Collection;");
+            imports.add("import shz.core.lock.Lock;");
+            imports.add("import shz.core.lock.LockKey;");
         }
 
         return content;

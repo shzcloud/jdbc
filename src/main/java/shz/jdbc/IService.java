@@ -4,6 +4,7 @@ import shz.core.model.PageInfo;
 import shz.orm.annotation.Where;
 import shz.orm.enums.Condition;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public interface IService<T> {
 
     int update(T entity);
 
-    int[] delete(List<?> ids);
+    int delete(Collection<?> ids);
 
     /**
      * @param fieldNames 指定需要插入的列对应字段，其余列忽略不插入并且指定的列不管是否为空都会强制插入

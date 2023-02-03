@@ -11,7 +11,6 @@ import shz.jdbc.JdbcService;
 import shz.jdbc.entity.SysDs;
 import shz.jdbc.entity.SysTableNode;
 import shz.jdbc.entity.SysTableNodeTransferInfo;
-import shz.orm.ClassInfo;
 import shz.orm.Tnp;
 import shz.orm.annotation.Transactional;
 import shz.orm.record.OrmConsistentHash;
@@ -41,7 +40,7 @@ public class JdbcConsistentHash<S extends JdbcConsistentHash<S, T>, T extends Jd
 
     @Override
     public void run(String... args) {
-        tnp = ClassInfo.load(cls, jdbcService).tnp;
+        tnp = jdbcService.nonNullClassInfo(cls).tnp;
         List<SysTableNode> tableNodes = jdbcService.selectListByColumn(SysTableNode.class, "tableName", tnp.tableName);
         if (!tableNodes.isEmpty())
             setNodes(ToSet.explicitCollect(tableNodes.stream().map(SysTableNode::getNode), tableNodes.size()));

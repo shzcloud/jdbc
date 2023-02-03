@@ -455,16 +455,17 @@ public class JdbcService extends OrmService {
         try {
             preSet(ep);
             st = ep.conn.createStatement();
+            batchSize = batchSize(batchSize);
             int batch = 0;
             for (String sql : sqls) {
                 st.addBatch(sql);
                 log(Level.DEBUG, () -> logSql("batch:" + sql));
-                if (batchSize > 0 && ++batch % batchSize == 0) {
+                if (++batch % batchSize == 0) {
                     executeBatch(ep, st);
                     batch = 0;
                 }
             }
-            if (batchSize <= 0 || batch > 0) executeBatch(ep, st);
+            if (batch > 0) executeBatch(ep, st);
         } catch (Throwable t) {
             catchThrow(ep);
             throw PRException.of(t);
@@ -495,17 +496,18 @@ public class JdbcService extends OrmService {
         try {
             preSet(ep);
             pst = ep.conn.prepareStatement(sql);
+            batchSize = batchSize(batchSize);
             int batch = 0;
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
                 log(Level.DEBUG, () -> logSql("batch:" + sql, params));
-                if (batchSize > 0 && ++batch % batchSize == 0) {
+                if (++batch % batchSize == 0) {
                     executeBatch(ep, pst);
                     batch = 0;
                 }
             }
-            if (batchSize <= 0 || batch > 0) executeBatch(ep, pst);
+            if (batch > 0) executeBatch(ep, pst);
         } catch (Throwable t) {
             catchThrow(ep);
             throw PRException.of(t);
@@ -565,19 +567,19 @@ public class JdbcService extends OrmService {
             preSet(ep);
             pst = ep.conn.prepareStatement(sql);
             int[] result = new int[values.size()];
+            batchSize = batchSize(batchSize);
             int batch = 0, destPos = 0;
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
                 log(Level.INFO, () -> logSql("batch:" + sql, params));
-                if (batchSize > 0 && ++batch % batchSize == 0) {
+                if (++batch % batchSize == 0) {
                     executeBatch(ep, commit, pst, result, destPos);
                     destPos += batch;
                     batch = 0;
                 }
             }
-            if (batchSize <= 0) executeBatch(ep, commit, pst, result, 0);
-            else if (batch > 0) executeBatch(ep, commit, pst, result, destPos);
+            if (batch > 0) executeBatch(ep, commit, pst, result, destPos);
             return result;
         } catch (Throwable t) {
             catchThrow(ep);
@@ -616,18 +618,18 @@ public class JdbcService extends OrmService {
             preSet(ep);
             st = ep.conn.createStatement();
             int[] result = new int[sqls.length];
+            batchSize = batchSize(batchSize);
             int batch = 0, destPos = 0;
             for (String sql : sqls) {
                 st.addBatch(sql);
                 log(Level.INFO, () -> logSql("batch:" + sql));
-                if (batchSize > 0 && ++batch % batchSize == 0) {
+                if (++batch % batchSize == 0) {
                     executeBatch(ep, commit, st, result, destPos);
                     destPos += batch;
                     batch = 0;
                 }
             }
-            if (batchSize <= 0) executeBatch(ep, commit, st, result, 0);
-            else if (batch > 0) executeBatch(ep, commit, st, result, destPos);
+            if (batch > 0) executeBatch(ep, commit, st, result, destPos);
             return result;
         } catch (Throwable t) {
             catchThrow(ep);
@@ -674,19 +676,19 @@ public class JdbcService extends OrmService {
             preSet(ep);
             pst = ep.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             int[] result = new int[values.size()];
+            batchSize = batchSize(batchSize);
             int batch = 0, destPos = 0;
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
                 log(Level.INFO, () -> logSql("batch:" + sql, params));
-                if (batchSize > 0 && ++batch % batchSize == 0) {
+                if (++batch % batchSize == 0) {
                     batchInsert0(idSetter, ep, commit, pst, result, destPos);
                     destPos += batch;
                     batch = 0;
                 }
             }
-            if (batchSize <= 0) batchInsert0(idSetter, ep, commit, pst, result, 0);
-            else if (batch > 0) batchInsert0(idSetter, ep, commit, pst, result, destPos);
+            if (batch > 0) batchInsert0(idSetter, ep, commit, pst, result, destPos);
             return result;
         } catch (Throwable t) {
             catchThrow(ep);
@@ -1057,7 +1059,7 @@ public class JdbcService extends OrmService {
         Class<?> cls = TypeHelp.toClass(type);
         List<Field> fields = AccessibleHelp.fields(cls);
         if (fields.isEmpty()) throw new OrmClassNoFieldException(cls, "");
-        ClassInfo classInfo = ClassInfo.get(cls);
+        ClassInfo classInfo = classInfo(cls);
         int count = metaData.getColumnCount();
         if (mapping == null) {
             for (int i = 0; i < count; ++i) {
@@ -1083,7 +1085,7 @@ public class JdbcService extends OrmService {
         Class<?> cls = TypeHelp.toClass(type);
         List<Field> fields = AccessibleHelp.fields(cls);
         if (fields.isEmpty()) throw new OrmClassNoFieldException(cls, "");
-        ClassInfo classInfo = ClassInfo.get(cls);
+        ClassInfo classInfo = classInfo(cls);
         Map<Field, Type> fieldTypeMap = TypeHelp.fieldType(type);
         int count = metaData.getColumnCount();
         if (mapping == null) {
@@ -1114,11 +1116,11 @@ public class JdbcService extends OrmService {
                 if ((types = TypeHelp.getActualTypeArguments(TypeHelp.fieldType(field, fieldTypeMap))) == null || types.length != 1)
                     continue;
                 if (!TypeHelp.likeModel(cls = TypeHelp.toClass(types[0]))) continue;
-                key = nestedColumMapping(ClassInfo.get(cls), fieldTypeMap, AccessibleHelp.fields(cls), column, mapField + field.getName() + ".");
+                key = nestedColumMapping(classInfo(cls), fieldTypeMap, AccessibleHelp.fields(cls), column, mapField + field.getName() + ".");
                 if (key == null) continue;
                 return key;
             }
-            key = nestedColumMapping(ClassInfo.get(fCls), fieldTypeMap, AccessibleHelp.fields(fCls), column, mapField + field.getName() + ".");
+            key = nestedColumMapping(classInfo(fCls), fieldTypeMap, AccessibleHelp.fields(fCls), column, mapField + field.getName() + ".");
             if (key != null) return key;
         }
         return null;

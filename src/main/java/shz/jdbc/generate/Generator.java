@@ -451,22 +451,15 @@ public abstract class Generator {
         return idx != -1 ? s.substring(0, idx) : s;
     }
 
-    protected String urlSuffix(Table table) {
-        String s = table.getTableName().toLowerCase();
-        if (s.startsWith("t_")) s = s.substring(2);
-        String module = module(table);
-        if (NullHelp.nonBlank(module) && s.startsWith(module + "_")) return s.substring(module.length() + 1);
-        return s;
-    }
-
     protected String version() {
         return "v1";
     }
 
     protected String requestMapping(Table table) {
-        String module = module(table);
-        if (NullHelp.isBlank(module)) return "/" + version() + "/" + urlSuffix(table);
-        return "/" + module + "/" + version() + "/" + urlSuffix(table);
+        String s = table.getTableName().toLowerCase();
+        if (s.startsWith("t_")) s = s.substring(2);
+        int idx = s.indexOf('_');
+        return idx == -1 ? "/" + version() + "/" + s : "/" + version() + "/" + s.substring(0, idx) + "/" + s.substring(idx + 1);
     }
 
     protected String date() {

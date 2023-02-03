@@ -70,6 +70,6 @@ public class AppendQueryVoData extends AppendData {
         String type = getType(column);
         String entityFieldImport = getImport(type);
         if (entityFieldImport != null) imports.add(entityFieldImport);
-        return "        private " + type + " " + fieldName(column) + ";\n";
+        return "        private " + type + " " + fieldName(column) + ";";
     }
 }
