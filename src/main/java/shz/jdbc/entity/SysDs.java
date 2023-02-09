@@ -8,6 +8,7 @@ public class SysDs {
     @Id
     private Long id;
     private String name;
+    private String serviceClassName;
     private String driverClassName;
     private String url;
     private String username;
@@ -27,6 +28,14 @@ public class SysDs {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getServiceClassName() {
+        return serviceClassName;
+    }
+
+    public void setServiceClassName(String serviceClassName) {
+        this.serviceClassName = serviceClassName;
     }
 
     public String getDriverClassName() {
@@ -66,6 +75,7 @@ public class SysDs {
         return "SysDs{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", serviceClassName='" + serviceClassName + '\'' +
                 ", driverClassName='" + driverClassName + '\'' +
                 ", url='" + url + '\'' +
                 ", username='" + username + '\'' +

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import shz.core.*;
+import shz.core.cl.ClassLoaderHelp;
 import shz.core.st.tst.LTST;
 import shz.core.structure.limiter.Limiter;
 import shz.core.type.TypeHelp;
@@ -76,7 +77,8 @@ public class JdbcService extends JdbcServiceHelper {
     }
 
     protected JdbcService createService(SysDs ds) {
-        JdbcService service = new JdbcService();
+        JdbcService service = (JdbcService) AccessibleHelp.newInstance(ClassLoaderHelp.load(ds.getServiceClassName()));
+        NullHelp.requireNonNull(service, "实例化JdbcService类:%s失败,数据源名称:%s", ds.getServiceClassName(), ds.getName());
         service.setDataSource(ds.getDriverClassName(), ds.getUrl(), ds.getUsername(), ds.getPassword());
         return service;
     }
