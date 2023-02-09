@@ -5,12 +5,12 @@ import shz.orm.annotation.*;
 
 @Repository
 public interface JdbcConsistentHashRepository {
-    @Query("SELECT ds_id " +
+    @Query("SELECT ds_name " +
             "FROM sys_table_node " +
             "WHERE table_name = :tableName " +
             "AND node = :node"
     )
-    Long selectDsId(String tableName, String node);
+    String selectDsName(String tableName, String node);
 
     @Fields({"id", "finished"})
     SysTableNodeTransferInfo selectForAttempt(String tableName);

@@ -8,7 +8,6 @@ import shz.core.msg.ServerFailureMsg;
 import shz.core.serializable.SerializableLongPredicate;
 import shz.core.serializable.Serializer;
 import shz.jdbc.JdbcService;
-import shz.jdbc.entity.SysDs;
 import shz.jdbc.entity.SysTableNode;
 import shz.jdbc.entity.SysTableNodeTransferInfo;
 import shz.orm.Tnp;
@@ -46,43 +45,27 @@ public class JdbcConsistentHash<S extends JdbcConsistentHash<S, T>, T extends Jd
             setNodes(ToSet.explicitCollect(tableNodes.stream().map(SysTableNode::getNode), tableNodes.size()));
     }
 
-    private static final Map<String, Map<String, JdbcService>> TABLE_NODE_SERVICE_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Long, JdbcService> DS_SERVICE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, String>> TABLE_NODE_DS_NAME_CACHE = new ConcurrentHashMap<>();
 
     @Override
     public final JdbcService service(String node) {
         if (NullHelp.isBlank(node)) return null;
-        JdbcService js = TABLE_NODE_SERVICE_CACHE.computeIfAbsent(tnp.tableName, k -> new ConcurrentHashMap<>(128)).computeIfAbsent(node, k -> {
-            Long dsId = repository.selectDsId(tnp.tableName, node);
-            if (dsId == null) return JdbcService.NULL;
-            return DS_SERVICE_CACHE.computeIfAbsent(dsId, k2 -> {
-                SysDs ds = jdbcService.selectById(SysDs.class, k2);
-                if (ds == null) return JdbcService.NULL;
-                return createService(ds);
-            });
+        String dsName = TABLE_NODE_DS_NAME_CACHE.computeIfAbsent(tnp.tableName, k -> new ConcurrentHashMap<>(128)).computeIfAbsent(node, k -> {
+            String name = repository.selectDsName(tnp.tableName, node);
+            return name == null ? "" : name;
         });
-        return js == JdbcService.NULL ? null : js;
-    }
-
-    protected JdbcService createService(SysDs ds) {
-        JdbcService service = new JdbcService();
-        service.setDataSource(ds.getDriverClassName(), ds.getUrl(), ds.getUsername(), ds.getPassword());
-        return service;
+        return jdbcService.getService(dsName);
     }
 
     public final void removeServiceByNode(String node) {
         if (NullHelp.nonBlank(node)) {
-            Map<String, JdbcService> map = TABLE_NODE_SERVICE_CACHE.get(tnp.tableName);
+            Map<String, String> map = TABLE_NODE_DS_NAME_CACHE.get(tnp.tableName);
             if (NullHelp.nonEmpty(map)) map.remove(node);
         }
     }
 
     public final void clearServiceByNode() {
-        TABLE_NODE_SERVICE_CACHE.remove(tnp.tableName);
-    }
-
-    public final void removeServiceByDsId(Long dsId) {
-        DS_SERVICE_CACHE.remove(dsId);
+        TABLE_NODE_DS_NAME_CACHE.remove(tnp.tableName);
     }
 
     @Override

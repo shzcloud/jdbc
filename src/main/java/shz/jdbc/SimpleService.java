@@ -16,8 +16,8 @@ public abstract class SimpleService<T> implements IService<T> {
     private final Class<T> cls = TypeHelp.getParameterizedType(getClass(), SimpleService.class, "T");
     protected JdbcService jdbcService;
 
-    protected SimpleService(JdbcServiceWrapper<?> serviceWrapper) {
-        jdbcService = serviceWrapper.getService();
+    protected SimpleService(String dsName) {
+        BeanContainer.set(JdbcService.class, value -> jdbcService = value.getService(dsName));
     }
 
     protected SimpleService() {

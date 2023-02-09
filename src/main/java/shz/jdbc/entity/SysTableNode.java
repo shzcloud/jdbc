@@ -9,7 +9,7 @@ public class SysTableNode {
     private Long id;
     private String tableName;
     private String node;
-    private Long dsId;
+    private String dsName;
 
     public Long getId() {
         return id;
@@ -35,12 +35,12 @@ public class SysTableNode {
         this.node = node;
     }
 
-    public Long getDsId() {
-        return dsId;
+    public String getDsName() {
+        return dsName;
     }
 
-    public void setDsId(Long dsId) {
-        this.dsId = dsId;
+    public void setDsName(String dsName) {
+        this.dsName = dsName;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class SysTableNode {
                 "id=" + id +
                 ", tableName='" + tableName + '\'' +
                 ", node='" + node + '\'' +
-                ", dsId=" + dsId +
+                ", dsName='" + dsName + '\'' +
                 '}';
     }
 }

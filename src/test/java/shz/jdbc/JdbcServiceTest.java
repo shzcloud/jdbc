@@ -18,7 +18,7 @@ class JdbcServiceTest {
         //获取代理类
         JdbcConsistentHashRepository proxy = InterfaceProxy.getProxy(JdbcConsistentHashRepository.class, p -> jdbcService.proxyExecute(p.method, p.args));
 
-        Long dsId = proxy.selectDsId("sys_visit_record", "0_0");
-        System.out.println(dsId);
+        String dsName = proxy.selectDsName("sys_visit", "0_0");
+        System.out.println(dsName);
     }
 }
