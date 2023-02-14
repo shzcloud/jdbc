@@ -278,6 +278,10 @@ abstract class JdbcServiceHelper extends OrmService {
             conn.close();
         } catch (SQLException ignored) {
         }
+        remove();
+    }
+
+    private void remove() {
         writeThreadLocal.remove();
         if (readThreadLocal != null) readThreadLocal.remove();
         referenceThreadLocal.remove();
@@ -287,7 +291,10 @@ abstract class JdbcServiceHelper extends OrmService {
         close(rst);
         close(pst);
         int count = referenceThreadLocal.get().decrementAndGet();
-        if (count < 0) throw new IllegalStateException();
+        if (count < 0) {
+            remove();
+            throw new IllegalStateException();
+        }
         if (count == 0) {
             if (!ep.rollback) try {
                 if (!ep.conn.getAutoCommit()) ep.conn.commit();

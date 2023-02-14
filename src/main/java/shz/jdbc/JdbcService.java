@@ -17,6 +17,7 @@ import shz.orm.exception.OrmClassNoFieldException;
 import shz.orm.param.OrmMapConsumer;
 import shz.orm.param.OrmMapFilter;
 import shz.orm.param.OrmMapping;
+import shz.spring.BeanContainer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -61,6 +62,23 @@ public class JdbcService extends JdbcServiceHelper {
 
     private static final JdbcService NULL = new JdbcService();
     private static final Map<String, JdbcService> DS_SERVICE_CACHE = new ConcurrentHashMap<>();
+
+    public static JdbcService get() {
+        return BeanContainer.get(JdbcService.class);
+    }
+
+    public static JdbcService get(String dsName) {
+        JdbcService service = get();
+        if (NullHelp.isBlank(dsName)) {
+            JdbcService js = service.mainService();
+            return js == null ? service : js;
+        }
+        return service.service(dsName);
+    }
+
+    protected JdbcService mainService() {
+        return service("main");
+    }
 
     @SuppressWarnings("unchecked")
     protected final <S extends OrmService> S service(String dsName) {

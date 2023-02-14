@@ -6,7 +6,6 @@ import shz.orm.enums.Condition;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public interface IService<T> {
     int add(T entity);
@@ -98,9 +97,9 @@ public interface IService<T> {
 
     T selectById(Object id);
 
-    List<T> selectByIds(Set<?> ids, List<String> fieldNames);
+    List<T> selectByIds(Collection<?> ids, List<String> fieldNames);
 
-    List<T> selectByIds(Set<?> ids);
+    List<T> selectByIds(Collection<?> ids);
 
     T selectOne(Object obj, List<String> fieldNames);
 

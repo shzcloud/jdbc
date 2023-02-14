@@ -1,11 +1,9 @@
 package shz.jdbc.entity;
 
-import shz.orm.annotation.Id;
 import shz.orm.annotation.Table;
 
 @Table("sys_table_node")
 public class SysTableNode {
-    @Id
     private Long id;
     private String tableName;
     private String node;

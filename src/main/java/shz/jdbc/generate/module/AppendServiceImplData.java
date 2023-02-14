@@ -60,9 +60,8 @@ public class AppendServiceImplData extends AppendData {
             content.add("    @Override");
             content.add("    public PageInfo<Query" + className + "Vo.Vo> page(PageVo<Query" + className + "Vo, Query" + className + "Vo.Vo> pageVo) {");
             content.add("        Query" + className + "Vo reqVo = pageVo.getData();");
-            content.add("        ClassInfo classInfo = jdbcService.nonNullClassInfo(" + className + ".class);");
-            content.add("        ActionRunner<" + className + "> runner = runner(selectMap(new " + className + "()), null, null, null, 0, null, null, jdbcService.whereSql(classInfo, reqVo, null, false));");
-            content.add("        PageInfo<" + className + "> page = page(pageVo.map(), runner, classInfo, null, Comparator.comparing(" + className + "::getCreateTime));");
+            content.add("        ActionRunner<" + className + "> runner = runner(null, null, null, jdbcService.whereSql(" + className + ".class, reqVo, null, false));");
+            content.add("        PageInfo<" + className + "> page = page(pageVo.map(), runner, null, Comparator.comparing(" + className + "::getCreateTime));");
             content.add("        return page.map(entity -> FieldSetter.copy(entity, new Query" + className + "Vo.Vo()));");
             content.add("    }\n");
 
@@ -80,7 +79,6 @@ public class AppendServiceImplData extends AppendData {
             imports.add("import shz.jdbc.JdbcService;");
             imports.add("import shz.core.model.PageInfo;");
             imports.add("import shz.spring.model.PageVo;");
-            imports.add("import shz.orm.ClassInfo;");
             imports.add("import shz.core.function.ActionRunner;");
             imports.add("import shz.core.FieldSetter;");
             imports.add("import java.util.Comparator;");
@@ -88,17 +86,27 @@ public class AppendServiceImplData extends AppendData {
         } else if (superEntity != null && TreeEntity.class.isAssignableFrom(superEntity)) {
             content.add("    @Lock(\"" + desc + "\")");
             content.add("    public int add(@LockKey(\"parentId\") " + className + " entity) {");
+            content.add("        check(entity);");
             content.add("        return jdbcService.insertTree(entity, tree -> ClientFailureMsg.requireNon(checkUniqueForInsert(tree, \"parentId\", \"name\"), \"" + desc + "已经存在\"), \"" + desc + "\");");
+            content.add("    }\n");
+
+            content.add("    @Override");
+            content.add("    protected void check(" + className + " entity) {");
             content.add("    }\n");
 
             content.add("    @Lock(\"" + desc + "\")");
             content.add("    public int update(@LockKey(\"parentId\") " + className + " entity) {");
+            content.add("        checkId(entity.getId());");
+            content.add("        check(entity);");
             content.add("        return jdbcService.updateTree(entity, tree -> ClientFailureMsg.requireNon(checkUniqueForUpdate(tree, \"parentId\", \"name\"), \"" + desc + "已经存在\"),  \"" + desc + "\");");
             content.add("    }\n");
 
             content.add("    @Override");
             content.add("    public int delete(Collection<?> ids) {");
-            content.add("        return super.delete(ids);");
+            content.add("        checkId(ids);");
+            content.add("        int row = super.delete(ids);");
+            content.add("        ServerFailureMsg.requireNon(row != ids.size(), \"删除" + desc + "失败\");");
+            content.add("        return row;");
             content.add("    }\n");
 
             content.add("    @Override");
@@ -115,6 +123,7 @@ public class AppendServiceImplData extends AppendData {
 
             imports.add("import " + tgp.detailVoGenInfo.packageName + "." + className + "DetailVo;");
             imports.add("import shz.core.msg.ClientFailureMsg;");
+            imports.add("import shz.core.msg.ServerFailureMsg;");
             imports.add("import shz.core.FieldSetter;");
             imports.add("import java.util.List;");
             imports.add("import java.util.Collection;");
@@ -123,12 +132,19 @@ public class AppendServiceImplData extends AppendData {
         } else {
             content.add("    @Lock(\"" + desc + "\")");
             content.add("    public int add(@LockKey(\"code\") " + className + " entity) {");
+            content.add("        check(entity);");
             content.add("        ClientFailureMsg.requireNon(checkUniqueForInsert(entity, \"code\"), \"" + desc + "已经存在\");");
             content.add("        return insert(entity);");
             content.add("    }\n");
 
+            content.add("    @Override");
+            content.add("    protected void check(" + className + " entity) {");
+            content.add("    }\n");
+
             content.add("    @Lock(\"" + desc + "\")");
             content.add("    public int update(@LockKey(\"code\") " + className + " entity) {");
+            content.add("        checkId(entity.getId());");
+            content.add("        check(entity);");
             content.add("        " + className + " oldEntity = selectById(entity.getId());");
             content.add("        ClientFailureMsg.requireNonNull(oldEntity, \"" + desc + "不存在\");");
             content.add("        ClientFailureMsg.requireNon(checkUniqueForUpdate(entity, \"code\"), \"" + desc + "已经存在\");");
@@ -137,7 +153,10 @@ public class AppendServiceImplData extends AppendData {
 
             content.add("    @Override");
             content.add("    public int delete(Collection<?> ids) {");
-            content.add("        return super.delete(ids);");
+            content.add("        checkId(ids);");
+            content.add("        int row = super.delete(ids);");
+            content.add("        ServerFailureMsg.requireNon(row != ids.size(), \"删除" + desc + "失败\");");
+            content.add("        return row;");
             content.add("    }\n");
 
             content.add("    @Override");
@@ -159,6 +178,7 @@ public class AppendServiceImplData extends AppendData {
             imports.add("import shz.core.model.PageInfo;");
             imports.add("import shz.spring.model.PageVo;");
             imports.add("import shz.core.msg.ClientFailureMsg;");
+            imports.add("import shz.core.msg.ServerFailureMsg;");
             imports.add("import shz.core.FieldSetter;");
             imports.add("import java.util.Collection;");
             imports.add("import shz.core.lock.Lock;");

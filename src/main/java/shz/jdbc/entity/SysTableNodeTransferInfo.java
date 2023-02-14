@@ -1,11 +1,9 @@
 package shz.jdbc.entity;
 
-import shz.orm.annotation.Id;
 import shz.orm.annotation.Table;
 
 @Table("sys_table_node_transfer_info")
 public class SysTableNodeTransferInfo {
-    @Id
     private Long id;
     private String tableName;
     private String node;

@@ -6,6 +6,10 @@ public abstract class BaseService<T, P> extends SimpleService<T> {
     @Autowired
     protected P repository;
 
+    public BaseService(JdbcService jdbcService) {
+        super(jdbcService);
+    }
+
     public BaseService(String dsName) {
         super(dsName);
     }

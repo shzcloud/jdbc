@@ -1,27 +1,33 @@
 package shz.jdbc;
 
+import shz.core.NullHelp;
+import shz.core.PRException;
+import shz.core.ToString;
 import shz.core.model.PageInfo;
+import shz.core.msg.ClientFailureMsg;
 import shz.core.type.TypeHelp;
 import shz.orm.enums.Condition;
 import shz.orm.sql.WhereSql;
-import shz.spring.BeanContainer;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.*;
 
 public abstract class SimpleService<T> implements IService<T> {
-    private final Class<T> cls = TypeHelp.getParameterizedType(getClass(), SimpleService.class, "T");
-    protected JdbcService jdbcService;
+    protected final Class<T> cls = TypeHelp.getParameterizedType(getClass(), SimpleService.class, "T");
+    protected final JdbcService jdbcService;
+
+    protected SimpleService(JdbcService jdbcService) {
+        this.jdbcService = jdbcService;
+    }
 
     protected SimpleService(String dsName) {
-        BeanContainer.set(JdbcService.class, value -> jdbcService = value.getService(dsName));
+        this(JdbcService.get(dsName));
     }
 
     protected SimpleService() {
-        BeanContainer.set(JdbcService.class, value -> jdbcService = value);
+        this("");
     }
 
     @Override
@@ -160,7 +166,7 @@ public abstract class SimpleService<T> implements IService<T> {
     }
 
     private WhereSql whereSql(Object obj, boolean orderBy) {
-        return jdbcService.whereSql(jdbcService.nonNullClassInfo(cls), obj, null, orderBy);
+        return jdbcService.whereSql(cls, obj, null, orderBy);
     }
 
     @Override
@@ -204,12 +210,12 @@ public abstract class SimpleService<T> implements IService<T> {
     }
 
     @Override
-    public List<T> selectByIds(Set<?> ids, List<String> fieldNames) {
+    public List<T> selectByIds(Collection<?> ids, List<String> fieldNames) {
         return jdbcService.selectByIds(cls, fieldNames, ids);
     }
 
     @Override
-    public List<T> selectByIds(Set<?> ids) {
+    public List<T> selectByIds(Collection<?> ids) {
         return jdbcService.selectByIds(cls, ids);
     }
 
@@ -257,6 +263,18 @@ public abstract class SimpleService<T> implements IService<T> {
         return jdbcService.groupBatchResult(entities, rows, mapper);
     }
 
+    protected void check(T entity) {
+    }
+
+    protected void checkId(Object id) {
+        ClientFailureMsg.requireNonNull(id, "ID不能为空");
+        ClientFailureMsg.requireNon(!(id instanceof Long) || ((long) id) <= 0L, "ID不存在");
+    }
+
+    protected void checkId(Collection<?> ids) {
+        if (NullHelp.nonEmpty(ids)) ids.forEach(this::checkId);
+    }
+
     /**
      * 新增校验唯一性
      */
@@ -277,5 +295,11 @@ public abstract class SimpleService<T> implements IService<T> {
     @SafeVarargs
     protected final <E> boolean batchEdit(List<E> newDataset, List<E> oldDataset, Function<? super E, ?>... classifiers) {
         return jdbcService.batchEdit(newDataset, oldDataset, classifiers);
+    }
+
+    protected void checkBoundData(Class<?> entityClass, String fieldName, Collection<?> fieldValues, String format) {
+        Map<?, ?> exists = jdbcService.existsColumn(entityClass, fieldName, fieldValues);
+        if (!exists.isEmpty())
+            throw PRException.of(ClientFailureMsg.fail(format, ToString.joining(exists.keySet(), ",", "(", ")")));
     }
 }
