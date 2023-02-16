@@ -162,7 +162,7 @@ public class AppendServiceImplData extends AppendData {
             content.add("    @Override");
             content.add("    public PageInfo<Query" + className + "Vo.Vo> page(PageVo<Query" + className + "Vo, Query" + className + "Vo.Vo> pageVo) {");
             content.add("        Query" + className + "Vo reqVo = pageVo.getData();");
-            content.add("        PageInfo<" + className + "> page = selectPage(pageVo.map(), reqVo);");
+            content.add("        PageInfo<" + className + "> page = selectPage(pageVo.simple(), reqVo);");
             content.add("        return page.map(entity -> FieldSetter.copy(entity, new Query" + className + "Vo.Vo()));");
             content.add("    }\n");
 

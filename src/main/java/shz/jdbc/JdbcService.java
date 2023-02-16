@@ -95,7 +95,7 @@ public class JdbcService extends JdbcServiceHelper {
     }
 
     protected JdbcService createService(SysDs ds) {
-        JdbcService service = (JdbcService) AccessibleHelp.newInstance(ClassLoaderHelp.load(ds.getServiceClassName()));
+        JdbcService service = (JdbcService) AccessibleHelp.newInstance(ClassLoaderHelp.load(ds.getServiceClassName(), false));
         NullHelp.requireNonNull(service, "实例化JdbcService类:%s失败,数据源名称:%s", ds.getServiceClassName(), ds.getName());
         service.setDataSource(ds.getDriverClassName(), ds.getUrl(), ds.getUsername(), ds.getPassword());
         return service;
@@ -115,7 +115,8 @@ public class JdbcService extends JdbcServiceHelper {
         try {
             preSet(conn);
             pst = conn.prepareStatement(sql);
-            if (fetchSize != Integer.MAX_VALUE) pst.setFetchSize(fetchSize <= 0 ? 3000 : fetchSize);
+            if (fetchSize != Integer.MAX_VALUE)
+                pst.setFetchSize(fetchSize == 0 ? 3000 : fetchSize < 0 ? 6000 : fetchSize);
             setPst(pst, params);
             log(Level.DEBUG, () -> logSql(sql, params));
             rst = pst.executeQuery();
