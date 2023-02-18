@@ -429,7 +429,7 @@ abstract class JdbcServiceHelper extends OrmService {
             int batch = 0;
             for (String sql : sqls) {
                 st.addBatch(sql);
-                log(Level.DEBUG, () -> logSql("batch:" + sql));
+                log(Level.DEBUG, () -> sql);
                 if (++batch % batchSize == 0) {
                     executeBatch(ep, st);
                     batch = 0;
@@ -468,10 +468,11 @@ abstract class JdbcServiceHelper extends OrmService {
             pst = ep.conn.prepareStatement(sql);
             batchSize = batchSize(batchSize);
             int batch = 0;
+            log(Level.DEBUG, () -> sql);
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
-                log(Level.DEBUG, () -> logSql("batch:" + sql, params));
+                log(Level.DEBUG, () -> Arrays.toString(params));
                 if (++batch % batchSize == 0) {
                     executeBatch(ep, pst);
                     batch = 0;
@@ -539,10 +540,11 @@ abstract class JdbcServiceHelper extends OrmService {
             int[] result = new int[values.size()];
             batchSize = batchSize(batchSize);
             int batch = 0, destPos = 0;
+            log(Level.INFO, () -> sql);
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
-                log(Level.INFO, () -> logSql("batch:" + sql, params));
+                log(Level.INFO, () -> Arrays.toString(params));
                 if (++batch % batchSize == 0) {
                     executeBatch(ep, commit, pst, result, destPos);
                     destPos += batch;
@@ -592,7 +594,7 @@ abstract class JdbcServiceHelper extends OrmService {
             int batch = 0, destPos = 0;
             for (String sql : sqls) {
                 st.addBatch(sql);
-                log(Level.INFO, () -> logSql("batch:" + sql));
+                log(Level.INFO, () -> sql);
                 if (++batch % batchSize == 0) {
                     executeBatch(ep, commit, st, result, destPos);
                     destPos += batch;
@@ -648,10 +650,11 @@ abstract class JdbcServiceHelper extends OrmService {
             int[] result = new int[values.size()];
             batchSize = batchSize(batchSize);
             int batch = 0, destPos = 0;
+            log(Level.INFO, () -> sql);
             for (Object[] params : values) {
                 setPst(pst, params);
                 pst.addBatch();
-                log(Level.INFO, () -> logSql("batch:" + sql, params));
+                log(Level.INFO, () -> Arrays.toString(params));
                 if (++batch % batchSize == 0) {
                     batchInsert0(idSetter, ep, commit, pst, result, destPos);
                     destPos += batch;
