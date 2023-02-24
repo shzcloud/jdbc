@@ -46,9 +46,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
         <slf4j.version>2.0.5</slf4j.version>
-        <shz-core.version>1.1.8</shz-core.version>
-        <shz-ast.version>1.0.1</shz-ast.version>
-        <shz-spring-bean.version>1.0.5</shz-spring-bean.version>
+        <shz-core.version>1.1.9</shz-core.version>
+        <shz-ast.version>1.0.2</shz-ast.version>
+        <shz-spring-bean.version>1.0.6</shz-spring-bean.version>
         <shz-orm.version>1.2.10</shz-orm.version>
         <spring.boot.version>2.7.4</spring.boot.version>
         <druid.version>1.2.15</druid.version>
